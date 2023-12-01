@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,38 +22,27 @@ public class RunService {
   private final RunRepository runRepository;
   private final UserService userService;
 
-  @Transactional
-  public RunEntity startRun(final RunEntity source) {
-    var sourceUser = source.getUser();
-    if (sourceUser == null) {
-      throw new IllegalArgumentException("Field user must be filled with a valid user");
+  @Transactional(readOnly = true)
+  public UserEntity getUser(Long id) {
+    Optional<UserEntity> foundedUser = userService.getUserById(id);
+    if (foundedUser.isEmpty()) {
+      throw new UserNotFoundException(String.format("User by id '%s' not found", id));
     }
+    return foundedUser.get();
+  }
 
-    Optional<UserEntity> foundedUser = userService.getUserById(sourceUser.getId());
-    if (foundedUser.isPresent()) {
-      var user = foundedUser.get();
-
-      var activeRunOptional = getActiveRun(user);
-      if (activeRunOptional.isPresent()) {
-        throw new RunBusinessLogicException("Other run in progress");
-      }
-
-      var target = new RunEntity();
-      setProperties(source, target);
-      target.setUser(user);
-
-      return save(target);
-    } else {
-      throw new UserNotFoundException(String.format("User by id '%s' not found", sourceUser.getId()));
-    }
+  @Transactional(readOnly = true)
+  public List<RunEntity> findByUserAndPeriod(
+      final UserEntity user,
+      final LocalDateTime fromDateTime,
+      final LocalDateTime toDateTime
+  ) {
+    return runRepository.findByUserIdAndPeriod(user.getId(), fromDateTime, toDateTime);
   }
 
   @Transactional
   public RunEntity finishRun(final RunEntity source) {
-    var sourceUser = source.getUser();
-    if (sourceUser == null) {
-      throw new IllegalArgumentException("Field user must be filled with a valid user");
-    }
+    var sourceUser = getUserByRun(source);
 
     Optional<UserEntity> foundedUser = userService.getUserById(sourceUser.getId());
     if (foundedUser.isPresent()) {
@@ -74,6 +65,29 @@ public class RunService {
   }
 
   @Transactional
+  public RunEntity startRun(final RunEntity source) {
+    var sourceUser = getUserByRun(source);
+
+    Optional<UserEntity> foundedUser = userService.getUserById(sourceUser.getId());
+    if (foundedUser.isPresent()) {
+      var user = foundedUser.get();
+
+      var activeRunOptional = getActiveRun(user);
+      if (activeRunOptional.isPresent()) {
+        throw new RunBusinessLogicException("Other run in progress");
+      }
+
+      var target = new RunEntity();
+      setProperties(source, target);
+      target.setUser(user);
+
+      return save(target);
+    } else {
+      throw new UserNotFoundException(String.format("User by id '%s' not found", sourceUser.getId()));
+    }
+  }
+
+  @Transactional
   public RunEntity save(RunEntity runEntity) {
     return runRepository.save(runEntity);
   }
@@ -82,6 +96,14 @@ public class RunService {
     return user.getRuns().stream()
         .filter(run -> run.getFinishDateTime() == null)
         .findFirst();
+  }
+
+  private UserEntity getUserByRun(RunEntity run) {
+    var user = run.getUser();
+    if (user == null) {
+      throw new IllegalArgumentException("Field user must be filled with a valid user");
+    }
+    return getUser(user.getId());
   }
 
   private void setProperties(

@@ -26,7 +26,7 @@ public class UserService {
     return userRepository.findById(id);
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public UserEntity create(UserEntity source) {
     return save(source);
   }
