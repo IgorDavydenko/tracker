@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ValidationMessage {
 
-  public static final String ERROR_POSITIVE_ID = "'id' must be positive integer";
+  public static final String ERROR_POSITIVE_ID = "Field 'id' must be positive integer";
 
 }

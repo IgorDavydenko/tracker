@@ -2,6 +2,7 @@ package com.github.igordavydenko.tracker.rest.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 public class RunDto implements Serializable {
 
   @NoArgsConstructor
+  @AllArgsConstructor
   @Getter
   @Setter
   public abstract static class AbstractRun implements Serializable {
@@ -21,7 +23,9 @@ public class RunDto implements Serializable {
     private Long userId;
   }
 
+
   @NoArgsConstructor
+  @AllArgsConstructor
   @Getter
   @Setter
   public static class RunStart extends AbstractRun {
@@ -32,6 +36,7 @@ public class RunDto implements Serializable {
   }
 
   @NoArgsConstructor
+  @AllArgsConstructor
   @Getter
   @Setter
   public static class RunFinish extends AbstractRun {
@@ -40,10 +45,11 @@ public class RunDto implements Serializable {
     private LocalDateTime finishDateTime;
     private Double finishLatitude;
     private Double finishLongitude;
-    private Double distance;
+    private Integer distance;
   }
 
   @NoArgsConstructor
+  @AllArgsConstructor
   @Getter
   @Setter
   public static class RunInfo extends AbstractRun {
@@ -56,10 +62,11 @@ public class RunDto implements Serializable {
     private LocalDateTime finishDateTime;
     private Double finishLatitude;
     private Double finishLongitude;
-    private Double distance;
+    private Integer distance;
   }
 
   @NoArgsConstructor
+  @AllArgsConstructor
   @Getter
   @Setter
   public static class RunStatistic extends RunInfo {

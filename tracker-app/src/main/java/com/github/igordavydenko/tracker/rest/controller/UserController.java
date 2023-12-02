@@ -41,14 +41,11 @@ public class UserController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<UserDto.UserResponse> findById(
+  public UserDto.UserResponse findById(
       @PathVariable
       @Positive(message = ERROR_POSITIVE_ID) Long id
   ) {
-    return userService.getUserById(id)
-        .map(this::toResponse)
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    return toResponse(userService.getUserById(id));
   }
 
   @PostMapping
@@ -62,26 +59,21 @@ public class UserController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(value = HttpStatus.NO_CONTENT)
-  public ResponseEntity<Void> deleteUser(
+  public void deleteUser(
       @PathVariable
       @Positive(message = ERROR_POSITIVE_ID) Long id
   ) {
     userService.delete(id);
-    return ResponseEntity.noContent().build();
   }
 
   @PutMapping(value = "/{id}")
-  @ResponseStatus(HttpStatus.OK)
-  public ResponseEntity<UserDto.UserResponse> updateUser(
+  public UserDto.UserResponse updateUser(
       @PathVariable
       @Positive(message = ERROR_POSITIVE_ID) final Long id,
       @RequestBody
       @Valid final UserDto.UserRequest user
   ) {
-    return userService.update(id, conversionService.convert(user, UserEntity.class))
-        .map(this::toResponse)
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    return toResponse(userService.update(id, conversionService.convert(user, UserEntity.class)));
   }
 
   private List<UserDto.UserResponse> toResponseList(final Iterable<UserEntity> userEntityIterable) {

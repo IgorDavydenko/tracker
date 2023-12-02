@@ -22,8 +22,12 @@ public class UserService {
   }
 
   @Transactional(readOnly = true)
-  public Optional<UserEntity> getUserById(Long id) {
-    return userRepository.findById(id);
+  public UserEntity getUserById(Long id) {
+    Optional<UserEntity> foundedUser = userRepository.findById(id);
+    if (foundedUser.isEmpty()) {
+      throw new UserNotFoundException(id);
+    }
+    return foundedUser.get();
   }
 
   @Transactional
@@ -32,17 +36,15 @@ public class UserService {
   }
 
   @Transactional
-  public Optional<UserEntity> update(Long id, UserEntity source) {
-    return getUserById(id)
-        .map(target -> {
-          setProperties(source, target);
-          return save(target);
-        });
+  public UserEntity update(Long id, UserEntity source) {
+    var target = getUserById(id);
+    setProperties(source, target);
+    return save(target);
   }
 
+  @Transactional
   public void delete(Long id) {
-    var user = getUserById(id)
-        .orElseThrow(() -> new UserNotFoundException(String.format("User by id '%s' not found", id)));
+    var user = getUserById(id);
     userRepository.delete(user);
   }
 

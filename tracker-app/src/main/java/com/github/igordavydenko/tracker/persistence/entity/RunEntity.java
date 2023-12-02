@@ -16,7 +16,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "run")
+@Table(name = "runs")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -46,7 +46,7 @@ public class RunEntity {
   private Double finishLongitude;
 
   @Column(name = "distance")
-  private Double distance;
+  private Integer distance;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)

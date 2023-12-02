@@ -1,7 +1,6 @@
 package com.github.igordavydenko.tracker.service;
 
 import com.github.igordavydenko.tracker.exception.RunBusinessLogicException;
-import com.github.igordavydenko.tracker.exception.UserNotFoundException;
 import com.github.igordavydenko.tracker.persistence.entity.RunEntity;
 import com.github.igordavydenko.tracker.persistence.entity.UserEntity;
 import com.github.igordavydenko.tracker.persistence.repository.RunRepository;
@@ -24,11 +23,16 @@ public class RunService {
 
   @Transactional(readOnly = true)
   public UserEntity getUser(Long id) {
-    Optional<UserEntity> foundedUser = userService.getUserById(id);
-    if (foundedUser.isEmpty()) {
-      throw new UserNotFoundException(String.format("User by id '%s' not found", id));
+    return userService.getUserById(id);
+  }
+
+  @Transactional
+  public UserEntity getUserByRun(RunEntity run) {
+    var user = run.getUser();
+    if (user == null) {
+      throw new IllegalArgumentException("Field user must be filled with a valid user");
     }
-    return foundedUser.get();
+    return getUser(user.getId());
   }
 
   @Transactional(readOnly = true)
@@ -42,49 +46,32 @@ public class RunService {
 
   @Transactional
   public RunEntity finishRun(final RunEntity source) {
-    var sourceUser = getUserByRun(source);
+    var user = getUserByRun(source);
+    var activeRunOptional = getActiveRun(user);
 
-    Optional<UserEntity> foundedUser = userService.getUserById(sourceUser.getId());
-    if (foundedUser.isPresent()) {
-      var user = foundedUser.get();
-
-      var activeRunOptional = getActiveRun(user);
-
-      if (activeRunOptional.isPresent()) {
-        var activeRun = activeRunOptional.get();
-        setProperties(source, activeRun);
-        calculateDistance(activeRun);
-        validate(activeRun);
-        return save(activeRun);
-      } else {
-        throw new RunBusinessLogicException("No active run found for user with id: " + sourceUser.getId());
-      }
+    if (activeRunOptional.isPresent()) {
+      var activeRun = activeRunOptional.get();
+      updateProperties(source, activeRun);
+      validateRun(activeRun);
+      return save(activeRun);
     } else {
-      throw new UserNotFoundException(String.format("User by id '%s' not found", sourceUser.getId()));
+      throw new RunBusinessLogicException(String.format("No active run found for user with id: '%s'", user.getId()));
     }
   }
 
   @Transactional
   public RunEntity startRun(final RunEntity source) {
-    var sourceUser = getUserByRun(source);
-
-    Optional<UserEntity> foundedUser = userService.getUserById(sourceUser.getId());
-    if (foundedUser.isPresent()) {
-      var user = foundedUser.get();
-
-      var activeRunOptional = getActiveRun(user);
-      if (activeRunOptional.isPresent()) {
-        throw new RunBusinessLogicException("Other run in progress");
-      }
-
-      var target = new RunEntity();
-      setProperties(source, target);
-      target.setUser(user);
-
-      return save(target);
-    } else {
-      throw new UserNotFoundException(String.format("User by id '%s' not found", sourceUser.getId()));
+    var user = getUserByRun(source);
+    var activeRunOptional = getActiveRun(user);
+    if (activeRunOptional.isPresent()) {
+      throw new RunBusinessLogicException("Other run in progress");
     }
+
+    var target = new RunEntity();
+    setProperties(source, target);
+    target.setUser(user);
+    validateStartRun(target);
+    return save(target);
   }
 
   @Transactional
@@ -98,12 +85,22 @@ public class RunService {
         .findFirst();
   }
 
-  private UserEntity getUserByRun(RunEntity run) {
-    var user = run.getUser();
-    if (user == null) {
-      throw new IllegalArgumentException("Field user must be filled with a valid user");
+  private double calculateDistance(final RunEntity runEntity) {
+    if (runEntity.getStartLatitude() == null
+        || runEntity.getFinishLatitude() == null
+        || runEntity.getStartLongitude() == null
+        || runEntity.getFinishLongitude() == null
+    ) {
+      throw new RunBusinessLogicException("Can't calculate distance. Some latitude or longitude params is null");
     }
-    return getUser(user.getId());
+    double latitude = Math.toRadians(runEntity.getFinishLatitude() - runEntity.getStartLatitude());
+    double longitude = Math.toRadians(runEntity.getFinishLongitude() - runEntity.getStartLongitude());
+
+    double a = Math.cos(Math.toRadians(runEntity.getStartLatitude()))
+        * Math.cos(Math.toRadians(runEntity.getFinishLatitude()))
+        * Math.sin(longitude / 2) * Math.sin(longitude / 2)
+        + Math.sin(latitude / 2) * Math.sin(latitude / 2);
+    return EARTH_RADIUS * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
   private void setProperties(
@@ -119,7 +116,12 @@ public class RunService {
     if (source.getStartLongitude() != null) {
       target.setStartLongitude(source.getStartLongitude());
     }
+  }
 
+  private void updateProperties(
+      final RunEntity source,
+      final RunEntity target
+  ) {
     if (source.getFinishDateTime() != null) {
       target.setFinishDateTime(source.getFinishDateTime());
     }
@@ -131,37 +133,35 @@ public class RunService {
     }
     if (source.getDistance() != null) {
       target.setDistance(source.getDistance());
+    } else {
+        target.setDistance((int) calculateDistance(target));
     }
   }
 
-  private void calculateDistance(final RunEntity runEntity) {
-    if (runEntity.getDistance() != null
-        || runEntity.getStartLatitude() == null
-        || runEntity.getFinishLatitude() == null
-        || runEntity.getStartLongitude() == null
-        || runEntity.getFinishLongitude() == null
-    ) {
-      return;
-    }
-    double latitude = Math.toRadians(runEntity.getFinishLatitude() - runEntity.getStartLatitude());
-    double longitude = Math.toRadians(runEntity.getFinishLongitude() - runEntity.getStartLongitude());
-
-    double a = Math.cos(Math.toRadians(runEntity.getStartLatitude()))
-        * Math.cos(Math.toRadians(runEntity.getFinishLatitude()))
-        * Math.sin(longitude / 2) * Math.sin(longitude / 2)
-        + Math.sin(latitude / 2) * Math.sin(latitude / 2);
-
-    runEntity.setDistance(EARTH_RADIUS * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-  }
-
-  private void validate(RunEntity runEntity) {
+  private void validateStartRun(RunEntity runEntity) {
     if (runEntity.getStartDateTime() == null) {
       throw new RunBusinessLogicException("Run startDateTime can't be null");
     }
+    if (runEntity.getStartLatitude() == null) {
+      throw new RunBusinessLogicException("Run startLatitude can't be null");
+    }
+    if (runEntity.getStartLongitude() == null) {
+      throw new RunBusinessLogicException("Run startLongitude can't be null");
+    }
+  }
+
+  private void validateRun(RunEntity runEntity) {
+    validateStartRun(runEntity);
     if (runEntity.getFinishDateTime() == null) {
       throw new RunBusinessLogicException("Run finishDateTime can't be null");
     }
-    if (runEntity.getFinishDateTime().isBefore(runEntity.getStartDateTime())) {
+    if (runEntity.getFinishLatitude() == null) {
+      throw new RunBusinessLogicException("Run finishLatitude can't be null");
+    }
+    if (runEntity.getFinishLongitude() == null) {
+      throw new RunBusinessLogicException("Run finishLongitude can't be null");
+    }
+    if (runEntity.getFinishDateTime().compareTo(runEntity.getStartDateTime()) < 0) {
       throw new RunBusinessLogicException("Finish time should be after start time");
     }
     if (runEntity.getDistance() < 0) {
