@@ -1,9 +1,8 @@
-package com.github.igordavydenko.tracker.controller;
+package com.github.igordavydenko.tracker.rest.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.igordavydenko.tracker.exception.UserNotFoundException;
 import com.github.igordavydenko.tracker.persistence.entity.UserEntity;
-import com.github.igordavydenko.tracker.rest.controller.UserController;
 import com.github.igordavydenko.tracker.rest.dto.UserDto;
 import com.github.igordavydenko.tracker.service.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -78,11 +77,7 @@ public class UserControllerTest {
   public void Whet_CreateUser_Success() throws Exception {
     var id = random.nextLong(0, Long.MAX_VALUE);
 
-    UserDto.UserRequest request = new UserDto.UserRequest();
-    request.setFirstName(RandomStringUtils.randomAlphabetic(10));
-    request.setLastName(RandomStringUtils.randomAlphabetic(10));
-    request.setBirthDate(LocalDate.EPOCH);
-    request.setSex(random.nextBoolean());
+    UserDto.UserRequest request = generateUserRequest();
 
     when(userService.create(any(UserEntity.class)))
         .thenAnswer(answer -> {
@@ -112,11 +107,7 @@ public class UserControllerTest {
 
   @Test
   public void Whet_UpdateUser_Success() throws Exception {
-    UserDto.UserRequest request = new UserDto.UserRequest();
-    request.setFirstName(RandomStringUtils.randomAlphabetic(10));
-    request.setLastName(RandomStringUtils.randomAlphabetic(10));
-    request.setBirthDate(LocalDate.EPOCH);
-    request.setSex(random.nextBoolean());
+    UserDto.UserRequest request = generateUserRequest();
 
     UserEntity userEntity = generateUserEntity();
 
@@ -146,5 +137,62 @@ public class UserControllerTest {
         .andExpect(jsonPath("$.errorMessage").value("Data not found"))
         .andExpect(jsonPath("$.errorDetails.length()").value(1))
         .andExpect(jsonPath("$.errorDetails[0].message").value("User by id '1' not found"));
+  }
+
+  @Test
+  public void Whet_CreateUser_ValidationError() throws Exception {
+    UserDto.UserRequest request = generateUserRequest();
+    request.setFirstName(null);
+    mockMvc.perform(post(PATH_PREFIX)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode").value(HttpStatus.BAD_REQUEST.value()))
+        .andExpect(jsonPath("$.errorMessage").value("Business logic exception"))
+        .andExpect(jsonPath("$.errorDetails[0].message").value("Field 'firstName' must be filled"))
+        .andExpect(jsonPath("$.errorDetails[0].fieldName").value("firstName"));
+
+    request = generateUserRequest();
+    request.setLastName(null);
+    mockMvc.perform(post(PATH_PREFIX)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode").value(HttpStatus.BAD_REQUEST.value()))
+        .andExpect(jsonPath("$.errorMessage").value("Business logic exception"))
+        .andExpect(jsonPath("$.errorDetails[0].message").value("Field 'lastName' must be filled"))
+        .andExpect(jsonPath("$.errorDetails[0].fieldName").value("lastName"));
+
+    request = generateUserRequest();
+    request.setBirthDate(null);
+    mockMvc.perform(post(PATH_PREFIX)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode").value(HttpStatus.BAD_REQUEST.value()))
+        .andExpect(jsonPath("$.errorMessage").value("Business logic exception"))
+        .andExpect(jsonPath("$.errorDetails[0].message").value("Field 'birthDate' must be filled"))
+        .andExpect(jsonPath("$.errorDetails[0].fieldName").value("birthDate"));
+
+    request = generateUserRequest();
+    request.setSex(null);
+    mockMvc.perform(post(PATH_PREFIX)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode").value(HttpStatus.BAD_REQUEST.value()))
+        .andExpect(jsonPath("$.errorMessage").value("Business logic exception"))
+        .andExpect(jsonPath("$.errorDetails[0].message").value("Field 'sex' must be filled"))
+        .andExpect(jsonPath("$.errorDetails[0].fieldName").value("sex"));
+
+  }
+
+  private UserDto.UserRequest generateUserRequest() {
+    UserDto.UserRequest request = new UserDto.UserRequest();
+    request.setFirstName(RandomStringUtils.randomAlphabetic(10));
+    request.setLastName(RandomStringUtils.randomAlphabetic(10));
+    request.setBirthDate(LocalDate.EPOCH);
+    request.setSex(random.nextBoolean());
+    return request;
   }
 }

@@ -27,7 +27,7 @@ public class ErrorResponse implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String fieldName;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String rejectedValue;
+    private Object rejectedValue;
   }
 
 }

@@ -6,7 +6,4 @@ public class RunBusinessLogicException extends RuntimeException {
     super(message);
   }
 
-  public RunBusinessLogicException(String message, Throwable cause) {
-    super(message, cause);
-  }
 }

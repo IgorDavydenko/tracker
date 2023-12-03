@@ -28,7 +28,7 @@ import static com.github.igordavydenko.tracker.rest.util.ValidationMessage.ERROR
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/users")
 @Validated
 public class UserController {
 

@@ -200,17 +200,17 @@ public class UserServiceTest {
     assertEquals(expectedUser.getSex(), actualUser.getSex());
   }
 
-  private UserEntity generateUserEntity() {
+  public static UserEntity generateUserEntity() {
     var userEntity = new UserEntity();
-    userEntity.setId(random.nextLong());
+    userEntity.setId(random.nextLong(0L, Long.MAX_VALUE));
     userEntity.setFirstName(RandomStringUtils.randomAlphabetic(10));
     userEntity.setLastName(RandomStringUtils.randomAlphabetic(10));
-    userEntity.setBirthDate(generateBirthDate());
+    userEntity.setBirthDate(generateLocalDate());
     userEntity.setSex(random.nextBoolean());
     return userEntity;
   }
 
-  public LocalDate generateBirthDate() {
+  private static LocalDate generateLocalDate() {
     return LocalDate.ofEpochDay(ThreadLocalRandom
         .current()
         .nextLong(
