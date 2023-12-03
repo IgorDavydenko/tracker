@@ -41,7 +41,7 @@ public class StatisticControllerTest {
 
     StatisticDto statistic = StatisticDto.builder()
         .totalRuns(random.nextInt())
-        .totalDistance(random.nextDouble())
+        .totalDistance(random.nextInt())
         .averageSpeed(random.nextDouble())
         .build();
 

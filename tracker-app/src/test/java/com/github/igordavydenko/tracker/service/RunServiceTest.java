@@ -104,7 +104,6 @@ public class RunServiceTest {
     );
   }
 
-
   @Test
   public void When_FindByUserAndPeriod_Success() {
     UserEntity user = new UserEntity();
@@ -239,13 +238,7 @@ public class RunServiceTest {
         exception.getMessage());
   }
 
-  public RunEntity generateStartRun() {
-    var user = new UserEntity();
-    user.setId(random.nextLong());
-    return generateStartRun(user);
-  }
-
-  public RunEntity generateStartRun(UserEntity user) {
+  public static RunEntity generateStartRun(UserEntity user) {
     var run = new RunEntity();
     run.setUser(user);
 
@@ -256,7 +249,7 @@ public class RunServiceTest {
     return run;
   }
 
-  public RunEntity generateRun(UserEntity user) {
+  public static RunEntity generateRun(UserEntity user) {
     var run = generateStartRun(user);
 
     run.setFinishDateTime(run.getStartDateTime().plusHours(1L));
@@ -266,7 +259,7 @@ public class RunServiceTest {
     return run;
   }
 
-  public LocalDateTime generateDateTime() {
+  public static LocalDateTime generateDateTime() {
     return LocalDateTime.of(
         LocalDate.ofEpochDay(ThreadLocalRandom
             .current()
@@ -278,11 +271,11 @@ public class RunServiceTest {
     );
   }
 
-  private Double generateLatitude() {
+  public static Double generateLatitude() {
     return numericGenerator.nextUniform(-90L, 90L);
   }
 
-  private Double generateLongitude() {
+  public static Double generateLongitude() {
     return numericGenerator.nextUniform(-180L, 180L);
 
   }

@@ -31,7 +31,6 @@ public class StatisticService {
         .collect(Collectors.toList());
   }
 
-
   @Transactional(readOnly = true)
   public StatisticDto getUserStatistic(
       final Long userId,
@@ -40,7 +39,7 @@ public class StatisticService {
   ) {
     var userRuns = getUserRuns(userId, fromDateTime, toDateTime);
 
-    double totalDistance = 0.0;
+    int totalDistance = 0;
     double totalTime = 0.0;
 
     for (RunDto.RunStatistic run : userRuns) {
