@@ -53,7 +53,7 @@ public class RunControllerTest {
     var id = random.nextLong(0, Long.MAX_VALUE);
 
     RunDto.RunStart runStart = new RunDto.RunStart();
-    runStart.setUserId(random.nextLong());
+    runStart.setUserId(random.nextLong(1L, Long.MAX_VALUE));
     runStart.setStartDateTime(LocalDateTime.now());
     runStart.setStartLatitude(random.nextDouble(-90, 90));
     runStart.setStartLongitude(random.nextDouble(-180, 180));
@@ -92,7 +92,7 @@ public class RunControllerTest {
   @Test
   public void Whet_FinishRun_Success() throws Exception {
     RunDto.RunFinish runFinish = new RunDto.RunFinish();
-    runFinish.setUserId(random.nextLong());
+    runFinish.setUserId(random.nextLong(1L, Long.MAX_VALUE));
     runFinish.setFinishDateTime(LocalDateTime.now());
     runFinish.setFinishLatitude(random.nextDouble(-90, 90));
     runFinish.setFinishLongitude(random.nextDouble(-180, 180));
