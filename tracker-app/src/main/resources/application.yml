@@ -10,3 +10,12 @@ spring:
     database: postgresql
     hibernate:
       ddl-auto: update
+  liquibase:
+    enabled: true
+    drop-first: false
+    url: jdbc:postgresql://localhost:5432/tracker
+    driverClassName: org.postgresql.Driver
+    user: postgres
+    password: liquibase
+    change-log: classpath:db/changelog/db.changelog-master.xml
+

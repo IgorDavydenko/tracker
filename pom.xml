@@ -20,6 +20,7 @@
 
 	<modules>
 		<module>tracker-app</module>
+		<module>tracker-migration</module>
 	</modules>
 
 	<properties>

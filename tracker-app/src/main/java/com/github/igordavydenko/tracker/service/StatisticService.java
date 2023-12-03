@@ -57,7 +57,7 @@ public class StatisticService {
     return StatisticDto.builder()
         .totalRuns(userRuns.size())
         .totalDistance(totalDistance)
-        .averageSpeed((totalTime > 0) ? totalDistance / totalTime : 0.0)
+        .averageSpeed((totalTime > 0) ? calculateAverageSpeed(totalDistance, totalTime) : 0.0)
         .build();
   }
 
