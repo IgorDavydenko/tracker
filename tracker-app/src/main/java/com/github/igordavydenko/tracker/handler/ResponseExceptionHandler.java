@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,18 +20,51 @@ public class ResponseExceptionHandler {
 
   private static final Logger log = (Logger) LoggerFactory.getLogger(ResponseExceptionHandler.class);
 
-  @ExceptionHandler(value
-      = { IllegalArgumentException.class, UserNotFoundException.class, RunBusinessLogicException.class })
+  @ExceptionHandler(value = {IllegalArgumentException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ErrorResponse handleBodyFieldError(RuntimeException ex) {
+  public ErrorResponse handleIllegalArgumentException(IllegalArgumentException ex) {
     log.error("IllegalArgumentException: {}", ex.getMessage());
-
-    List<String> errorMessage = new LinkedList<>();
-    errorMessage.add(ex.getMessage());
 
     return ErrorResponse.builder()
         .errorCode(HttpStatus.BAD_REQUEST.value())
-        .errorDetails(errorMessage)
+        .errorMessage("Illegal argument")
+        .errorDetails(Collections.singletonList(
+            ErrorResponse.ErrorDetails.builder()
+                .message(ex.getMessage())
+                .build()
+        ))
+        .build();
+  }
+
+  @ExceptionHandler(value = {UserNotFoundException.class})
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ErrorResponse handleNotFound(UserNotFoundException ex) {
+    log.error("Not found exception: {}", ex.getMessage());
+
+    return ErrorResponse.builder()
+        .errorCode(HttpStatus.NOT_FOUND.value())
+        .errorMessage("Data not found")
+        .errorDetails(Collections.singletonList(
+            ErrorResponse.ErrorDetails.builder()
+                .message(ex.getMessage())
+                .build()
+        ))
+        .build();
+  }
+
+  @ExceptionHandler(value = {RunBusinessLogicException.class})
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ErrorResponse handleBusinessLogicException(RunBusinessLogicException ex) {
+    log.error("Business logic exception: {}", ex.getMessage());
+
+    return ErrorResponse.builder()
+        .errorCode(HttpStatus.BAD_REQUEST.value())
+        .errorMessage("Business logic exception")
+        .errorDetails(Collections.singletonList(
+            ErrorResponse.ErrorDetails.builder()
+                .message(ex.getMessage())
+                .build()
+        ))
         .build();
   }
 
@@ -38,13 +72,16 @@ public class ResponseExceptionHandler {
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ErrorResponse unhandledException(Exception ex) {
-
-    List<String> errorMessage = new LinkedList<>();
-    errorMessage.add(ExceptionUtils.getStackTrace(ex));
+    log.error("Internal error: {}", ex.getMessage());
 
     return ErrorResponse.builder()
         .errorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-        .errorDetails(errorMessage)
+        .errorMessage("Internal server error")
+        .errorDetails(Collections.singletonList(
+            ErrorResponse.ErrorDetails.builder()
+                .message(ExceptionUtils.getStackTrace(ex))
+                .build()
+        ))
         .build();
   }
 
