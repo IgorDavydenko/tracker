@@ -184,7 +184,6 @@ public class UserControllerTest {
         .andExpect(jsonPath("$.errorMessage").value("Business logic exception"))
         .andExpect(jsonPath("$.errorDetails[0].message").value("Field 'sex' must be filled"))
         .andExpect(jsonPath("$.errorDetails[0].fieldName").value("sex"));
-
   }
 
   private UserDto.UserRequest generateUserRequest() {
