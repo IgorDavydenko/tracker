@@ -3,9 +3,9 @@ spring:
     name: tracker-application
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/tracker
-    username: postgres
-    password: postgres
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
   jpa:
     database: postgresql
     hibernate:
@@ -13,9 +13,9 @@ spring:
   liquibase:
     enabled: true
     drop-first: false
-    url: jdbc:postgresql://localhost:5432/tracker
+    url: ${DATABASE_URL}
     driverClassName: org.postgresql.Driver
-    user: postgres
-    password: liquibase
+    user: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
     change-log: classpath:db/changelog/db.changelog-master.xml
 

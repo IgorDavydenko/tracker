@@ -1,0 +1,1 @@
+before start config properties in file src/main/resources/application.properties with your database params
